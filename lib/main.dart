@@ -1,47 +1,65 @@
-// Flutter kütüphanesinin temel UI bileşenlerini (renkler, butonlar, metinler vb.) projeye aktarır.
+// Flutter'ın hazır arayüz parçalarını (buton, yazı, kutu, renk vb.) projeye getirir.
 import 'package:flutter/material.dart';
-
+// Supabase (veri tabanı ve üyelik servisi) ile konuşmamızı sağlayan paketi projeye getirir.
+import 'package:supabase_flutter/supabase_flutter.dart';
+// Giriş ekranı dosyasını bu dosyaya bağlar. Böylece LoginScreen'i burada kullanabiliriz.
 import 'ekranlar/giris_ekrani.dart';
+// Ana sayfa dosyasını bu dosyaya bağlar. Böylece HomeScreen'i burada kullanabiliriz.
+import 'ekranlar/ana_sayfa_ekrani.dart';
 
-// Uygulamanın çalışmaya başladığı ana fonksiyon.
-void main() {
-  // 'runApp' fonksiyonu, parametre olarak verilen SeenitApp widget'ını ekranın tamamında çalıştırır.
+// Uygulamanın başladığı ana fonksiyon. 'async', içinde beklemeli bir işlem (Supabase bağlantısı) olduğunu gösterir.
+Future<void> main() async {
+  // Flutter'ın tamamen hazır olmasını bekler. Supabase'i başlatmadan önce bu satır gereklidir.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Supabase'e bağlanır. 'await', bağlantı kurulana kadar bekle demektir.
+  await Supabase.initialize(
+    // Supabase'deki projemizin internet adresi.
+    url: 'https://pqjkglfweknphaqgqiea.supabase.co',
+    // Uygulamaya konulmak için üretilmiş herkese açık anahtar (publishable key). Gizli anahtar değildir.
+    anonKey: 'sb_publishable_cO0rU4Apzfyhdb1ifDGZiQ_MTi_Gl60',
+  );
+
+  // Bağlantı kurulduktan sonra SeenitApp widget'ını ekranda çalıştırır.
   runApp(const SeenitApp());
 }
 
 // =============================================================================
-// 1. UYGULAMA GENEL AYARLARI VE TEMA (SeenitApp)
+// UYGULAMA GENEL AYARLARI VE TEMA (SeenitApp)
 // =============================================================================
-// 'StatelessWidget', durumu (state) değişmeyen, yani ekranda dinamik veri güncellemesi yapmayan sabit yapıdır.
+// 'StatelessWidget': içeriği kendi kendine değişmeyen sabit bir yapıdır.
 class SeenitApp extends StatelessWidget {
-  // 'super.key', bu widget'ın benzersiz bir kimliğe sahip olmasını sağlar ve performans optimize eder.
+  // 'super.key': bu widget'a benzersiz bir kimlik verir (Flutter'ın iç işleyişi için).
   const SeenitApp({super.key});
 
-  // 'build' metodu, widget'ın ekranda nasıl çizileceğini tanımlar.
+  // 'build': bu widget'ın ekranda nasıl çizileceğini tanımlar.
   @override
   Widget build(BuildContext context) {
-    // 'MaterialApp', Material Design standartlarına uygun bir mobil uygulama yapısı başlatır.
+    // 'MaterialApp': Material Design kurallarına uygun bir mobil uygulama başlatır.
     return MaterialApp(
-      // Uygulamanın cihaz ayarlarındaki veya arka plandaki ismi.
+      // Uygulamanın adı (cihazda ve tarayıcı sekmesinde görünür).
       title: 'Seenit',
-      // Sağ üstteki 'DEBUG' yazısı bandını ekrandan kaldırır.
+      // Sağ üstteki kırmızı 'DEBUG' bandını kaldırır.
       debugShowCheckedModeBanner: false,
-      // Uygulama genelinde geçerli olan tema ayarlarını belirler.
+      // Uygulama genelindeki renk ve stil ayarları.
       theme: ThemeData.dark().copyWith(
-        // Sayfaların arka plan rengini tasarıma uygun koyu tona ayarlar.
+        // Bütün sayfaların arka plan rengi (koyu lacivert/siyah).
         scaffoldBackgroundColor: const Color(0xFF12141D),
-        // Uygulamanın ana vurgu rengini sarı (0xFFF3B32A) yapar.
+        // Uygulamanın ana vurgu rengi (sarı).
         primaryColor: const Color(0xFFF3B32A),
-        // Renk şemasındaki detayları belirler.
+        // Renk şemasının ayrıntıları.
         colorScheme: const ColorScheme.dark(
           // Ana renk olarak sarı tanımlanır.
           primary: Color(0xFFF3B32A),
-          // Input alanları ve kartların koyu arka plan rengi tanımlanır.
+          // Kartların ve kutuların koyu gri yüzey rengi.
           surface: Color(0xFF1E202C),
         ),
       ),
-      // Uygulama açıldığında varsayılan olarak gösterilecek olan ekran.
-      home: const LoginScreen(),
+      // Uygulama açılınca hangi ekranın geleceğini belirler.
+      // Daha önce giriş yapılmışsa (kayıtlı oturum varsa) doğrudan ana sayfa, yoksa giriş ekranı açılır.
+      home: Supabase.instance.client.auth.currentSession == null
+          ? const LoginScreen()
+          : const HomeScreen(),
     );
   }
 }
